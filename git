@@ -1,0 +1,258 @@
+# ==============================
+# GIT EXAM PRACTICE FILE
+# ==============================
+
+
+# Check installed Git version
+git --version
+# Work: Shows installed Git version
+
+
+# Initialize a new repository
+git init
+# Work: Creates a new .git repository
+
+
+# Show all Git configurations
+git config --list
+# Work: Displays current Git settings
+
+
+# Set global username
+git config --global user.name "YourName"
+# Work: Sets username globally
+
+
+# Set global email
+git config --global user.email "yourmail@gmail.com"
+# Work: Sets email globally
+
+
+# Set default editor
+git config --global core.editor "'C:/Program Files/Sublime Text/subl.exe' -w"
+# Work: Sets Sublime Text as Git editor
+
+
+# Check repository status
+git status
+# Work: Shows tracked/untracked/staged files
+
+
+# Add single file
+git add File1.txt
+# Work: Adds one file to staging area
+
+
+# Add all files
+git add .
+# Work: Adds all files to staging area
+
+
+# Commit staged files
+git commit -m "First commit"
+# Work: Saves staged changes permanently
+
+
+# Commit modified tracked files directly
+git commit -am "Updated file"
+# Work: Adds and commits modified tracked files only
+
+
+# Show detailed commit history
+git log
+# Work: Displays full commit details
+
+
+# Show short commit history
+git log --oneline
+# Work: Displays short commit history
+
+
+# Show graphical branch history
+git log --graph --oneline
+# Work: Displays commit graph
+
+
+# Show unstaged changes
+git diff
+# Work: Displays modified changes not staged
+
+
+# Show staged changes
+git diff --staged
+# Work: Displays staged changes before commit
+
+
+# Remove file from staging area
+git restore --staged File1.txt
+# Work: Unstages file but keeps changes
+
+
+# Discard local file changes
+git restore File1.txt
+# Work: Removes changes from working directory
+
+
+# Revert a specific commit safely
+git revert commit_id
+# Work: Creates new commit that undoes selected commit
+
+
+# Example revert
+git revert 7828ba0
+# Work: Reverts commit with ID 7828ba0
+
+
+# ==============================
+# RESET COMMANDS
+# ==============================
+
+
+# Soft reset
+git reset --soft HEAD~1
+# Work: Removes last commit but keeps staged changes
+
+
+# Mixed reset (DEFAULT RESET)
+git reset --mixed HEAD~1
+# Work: Removes last commit and unstages changes
+# Changes remain in working directory
+
+
+# Hard reset
+git reset --hard HEAD~1
+# Work: Removes commit and deletes changes permanently
+
+
+# ==============================
+# BRANCHING
+# ==============================
+
+
+# Show branches
+git branch
+# Work: Lists all branches
+
+
+# Create branch
+git branch Chat
+# Work: Creates new branch named Chat
+
+
+# Create another branch
+git branch Sound
+# Work: Creates Sound branch
+
+
+# Switch branch using old command
+git checkout Chat
+# Work: Switches to Chat branch
+
+
+# Switch branch using new command
+git switch Chat
+# Work: Switches to Chat branch
+
+
+# Switch back to master
+git switch master
+# Work: Returns to master branch
+
+
+# ==============================
+# MERGING
+# ==============================
+
+
+# Merge Chat branch
+git merge Chat
+# Work: Combines Chat branch into current branch
+
+
+# Merge Sound branch
+git merge Sound
+# Work: Combines Sound branch into current branch
+
+
+# ==============================
+# MERGE CONFLICT
+# ==============================
+
+
+# Merge causing conflict
+git merge B1
+# Work: Attempts to merge B1 branch
+
+
+# Fix conflict manually then add files
+git add .
+# Work: Stages resolved files
+
+
+# Commit after resolving conflict
+git commit -m "Merge conflict resolved"
+# Work: Saves resolved merge conflict
+
+
+# ==============================
+# DELETE BRANCH
+# ==============================
+
+
+# Delete merged branch
+git branch -d Chat
+# Work: Deletes branch safely
+
+
+# Force delete branch
+git branch -D Sound
+# Work: Deletes branch forcefully
+
+
+# ==============================
+# QUICK PRACTICE FLOW
+# ==============================
+
+
+git init
+# Initialize repository
+
+
+git status
+# Check repository state
+
+
+git add .
+# Stage all files
+
+
+git commit -m "first commit"
+# Save first commit
+
+
+git branch test
+# Create test branch
+
+
+git switch test
+# Move to test branch
+
+
+git add .
+# Stage changes
+
+
+git commit -m "branch work"
+# Save branch work
+
+
+git switch master
+# Return to master
+
+
+git merge test
+# Merge test branch
+
+
+git log --graph --oneline
+# Show branch graph
