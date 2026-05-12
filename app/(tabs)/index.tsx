@@ -1,98 +1,188 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Platform } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const FOCUS_TIME = .2 * 60;
+const BREAK_TIME = .1 * 60;
 
-export default function HomeScreen() {
+if (Platform.OS !== 'web') {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
+
+export default function PomodoroTimer() {
+  const [isActive, setIsActive] = useState(false);
+  const [seconds, setSeconds] = useState(FOCUS_TIME);
+  const [isFocusMode, setIsFocusMode] = useState(true);
+
+  // load all save data and notification request
+  useEffect(() => {
+    requestPermissions();
+    loadState();
+  }, []);
+
+  useEffect(() => {
+    saveState();
+  }, [seconds, isActive, isFocusMode]);
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && seconds > 0) {
+      interval = setInterval(() => {
+        setSeconds((prev) => prev - 1);
+      }, 1000);
+    } else if (isActive && seconds === 0) {
+      handleSessionComplete();
+    }
+    // for clear prevent mutliple same time  1000 java script in mili sec
+    return () => clearInterval(interval);
+  }, [isActive, seconds, isFocusMode]);
+
+  async function requestPermissions() {
+    if (Platform.OS === 'web') return;
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('Notification permissions not granted');
+    }
+  }
+
+  async function handleSessionComplete() {
+    const nextMode = !isFocusMode;
+    setIsFocusMode(nextMode);
+    setSeconds(nextMode ? FOCUS_TIME : BREAK_TIME);
+
+    if (Platform.OS !== 'web') {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "Pomodoro Timer",
+          body: nextMode ? "Break over! Time to focus." : "Work session completed! Time for a break!",
+        },
+        trigger: null,
+      });
+    } else {
+      alert(nextMode ? "Break over! Time to focus." : "Work session completed! Time for a break!");
+    }
+  }
+
+  const saveState = async () => {
+    try {
+      const state = JSON.stringify({ seconds, isFocusMode });
+      await AsyncStorage.setItem('pomodoro_state', state);
+    } catch (e) {
+      console.error('Failed to save state');
+    }
+  };
+
+  const loadState = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('pomodoro_state');
+      if (saved) {
+        const { seconds: s, isFocusMode: m } = JSON.parse(saved);
+        setSeconds(s);
+        setIsFocusMode(m);
+      }
+    } catch (e) {
+      console.error('Failed to load state');
+    }
+  };
+
+  const toggleTimer = () => setIsActive(!isActive);
+
+  const resetTimer = () => {
+    setIsActive(false);
+    setIsFocusMode(true);
+    setSeconds(FOCUS_TIME);
+  };
+
+  const formatTime = (sec) => {
+    const mins = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${mins}:${s < 10 ? '0' : ''}${s}`;
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.container, { backgroundColor: isFocusMode ? '#ffffffff' : '#3caf89ff' }]}>
+      <StatusBar barStyle="light-content" />
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <Text style={styles.modeText}>
+        {isFocusMode ? 'Focus' : 'Break'}
+        {"\n"}
+        <Text style={styles.smallText}>
+          {isFocusMode ? "Let's focus" : "Let's take a break"}
+        </Text>
+      </Text>
+
+      <View style={styles.timerCircle}>
+        <Text style={styles.timer}>{formatTime(seconds)}</Text>
+      </View>
+
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.button} onPress={toggleTimer}>
+          <Text style={styles.buttonText}>{isActive ? 'Pause' : 'Start'}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.button} onPress={resetTimer}>
+          <Text style={styles.buttonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
+    padding: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  modeText: {
+    fontSize: 32,
+    color: 'black',
+    fontWeight: '600',
+    marginBottom: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  smallText: {
+    fontSize: 16,
+    fontWeight: 'normal',
+    color: 'gray',
+  },
+  timer: {
+    fontSize: 72,
+    color: 'black',
+    fontWeight: 'bold',
+  },
+  timerCircle: {
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 6,
+    borderColor: 'blue',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  button: {
+    backgroundColor: 'white',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+  },
+  buttonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
   },
 });
